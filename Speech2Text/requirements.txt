@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+speechmatics-rt
+httpx
+python-dotenv

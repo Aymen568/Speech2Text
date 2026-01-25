@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>استوديو الصوت</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">ED</div>
+        <div>
+          <div class="title">مسجل الدروس</div>
+          <div class="subtitle">سجّل شرحك وحوّله لنص تعليمي</div>
+        </div>
+      </div>
+      <div class="pill">تسجيل مباشر لمحتوى تعليمي</div>
+    </header>
+
+    <main class="layout">
+      <section class="panel capture">
+        <div class="panel-header">
+          <div>
+            <h1>دوّن شرحك التعليمي</h1>
+            <p>اضغط تسجيل واشرح المفاهيم للمتعلمين. سنحوّل الصوت إلى نص منسق يمكن مراجعته لاحقًا.</p>
+          </div>
+          <div class="actions">
+            <button id="recordButton" class="primary">ابدأ التسجيل</button>
+            <button id="stopButton" class="ghost" disabled>إيقاف</button>
+            <button id="clearButton" class="ghost" disabled>مسح النص</button>
+          </div>
+        </div>
+
+        <div class="status-grid">
+          <div class="status-card">
+            <div class="label">الحالة</div>
+            <div class="value" id="stateLabel">متوقف</div>
+          </div>
+          <div class="status-card">
+            <div class="label">المدة</div>
+            <div class="value" id="timer">00:00</div>
+          </div>
+          <div class="status-card">
+            <div class="label">آخر تحديث</div>
+            <div class="value" id="lastUpdate">—</div>
+          </div>
+          <div class="status-card status-transcription">
+            <div class="label">التحويل</div>
+            <div class="value" id="transcriptionStatus">بانتظار التسجيل…</div>
+          </div>
+          <div class="status-card">
+            <div class="label">بث الخادم</div>
+            <div class="value" id="backendStatus">غير متصل</div>
+          </div>
+        </div>
+
+        <div class="transcript">
+          <div class="transcript-header">
+            <div>
+              <div class="eyebrow">النص التعليمي المباشر</div>
+              <h2 id="transcriptTitle">ابدأ الشرح ليسجَّل</h2>
+            </div>
+            <div class="hint">الصوت يبقى محليًا؛ التحويل للنص يسهّل إعداد الملاحظات والملخصات.</div>
+          </div>
+          <div id="transcriptBody" class="transcript-body" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <aside class="panel questions" aria-label="أسئلة ذات صلة">
+        <div class="panel-header">
+          <div>
+            <div class="eyebrow">مراجعة الدرس</div>
+            <h2>أسئلة المتابعة (لاحقًا)</h2>
+          </div>
+          <button id="refreshQuestions" class="ghost" disabled>لاحقًا</button>
+        </div>
+        <div id="questionList" class="question-list"></div>
+        <div class="note">سيتم إضافة أسئلة مراجعة بعد تجهيز المحتوى.</div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="main.js" defer></script>
+</body>
+</html>
