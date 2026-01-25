@@ -16,8 +16,10 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  schedule:
-    - cron: '16 6 * * 6'
+  on:
+    push:
+    pull_request:
+      branches: [ "main" ]
 
 jobs:
   analyze:
