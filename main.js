@@ -59,21 +59,13 @@ function handleStop() {
   state.chunks = [];
   transcriptionStatus.textContent = 'جارٍ التحويل للنص…';
   lastUpdate.textContent = new Date().toLocaleTimeString();
-  mockTranscribeAudio(blob)
-    .then(text => {
-      const cleaned = text.trim();
-      state.transcript = state.transcript
+  state.transcript = state.transcript
         ? `${state.transcript} ${cleaned}`
         : cleaned;
-      transcriptTitle.textContent = 'أحدث نص تعليمي';
-      transcriptBody.textContent = state.transcript;
-      transcriptionStatus.textContent = 'تم التحويل';
-      clearButton.disabled = !state.transcript;
-      updateQuestions(state.transcript);
-    })
-    .catch(() => {
-      transcriptionStatus.textContent = 'فشل التحويل إلى نص';
-    });
+  transcriptTitle.textContent = 'أحدث نص تعليمي';
+  transcriptBody.textContent = state.transcript;
+  transcriptionStatus.textContent = 'تم التحويل';
+  clearButton.disabled = !state.transcript;
 }
 
 function startTimer() {
@@ -261,53 +253,10 @@ function downsampleBuffer(buffer, inputRate, targetRate) {
   return pcm;
 }
 
-async function mockTranscribeAudio(blob) {
-  // Replace this with your real API call. The blob contains the recorded audio.
-  await delay(800);
-  const samples = [
-    'اليوم سنشرح كيفية حل المسائل خطوة بخطوة مع أمثلة مبسطة.',
-    'سأراجع أهداف الدرس ثم أوضح المفهوم الأساسي بلغة سهلة.',
-    'سنعرض تطبيقًا عمليًا ونلخص القواعد في نهاية الشرح.',
-    'سأذكر الأخطاء الشائعة وكيف يمكن للمتعلم تجنبها أثناء الحل.',
-  ];
-  return samples[Math.floor(Math.random() * samples.length)];
-}
-
 function delay(ms) { return new Promise(res => setTimeout(res, ms)); }
 
 function updateQuestions(text) {
-  // إبقاء قائمة الأسئلة فارغة في هذه المرحلة.
   questionList.innerHTML = '';
-}
-
-function generateQuestions(text) {
-  const lowered = text.toLowerCase();
-  const bank = [];
-
-  if (lowered.includes('تعلم') || lowered.includes('تعليم') || lowered.includes('دورة')) {
-    bank.push('ما النتيجة التعليمية المستهدفة من هذا الجزء؟');
-    bank.push('كيف ستقيس أن المتعلمين احتفظوا بالمادة فعلًا؟');
-  }
-  if (lowered.includes('ملاحظات') || lowered.includes('تغذية') || lowered.includes('feedback')) {
-    bank.push('متى وأين يجدر بنا جمع ملاحظات المتعلمين؟');
-  }
-  if (lowered.includes('تفاعل') || lowered.includes('احتفاظ') || lowered.includes('engage')) {
-    bank.push('أي لحظات تفاعل تستحق حوافز بصرية أو مكافآت صغيرة؟');
-  }
-  if (lowered.includes('تدريب') || lowered.includes('سؤال') || lowered.includes('practice')) {
-    bank.push('كيف يجب أن تتكيّف أسئلة التدريب مع ملف المتعلم؟');
-  }
-  if (lowered.includes('خارطة') || lowered.includes('معلم') || lowered.includes('roadmap')) {
-    bank.push('ما المعلم الواحد الذي يفتح المرحلة التالية؟');
-  }
-
-  if (bank.length < 4) {
-    bank.push('ما الافتراض الذي يجب أن نتحقق منه أولًا؟');
-    bank.push('من هو المستخدم الأساسي وما المهمة المباشرة التي يريد إنجازها؟');
-    bank.push('ما أصغر تجربة يمكننا تنفيذها لاختبار هذه الفكرة؟');
-  }
-
-  return bank.slice(0, 6);
 }
 
 updateQuestions('');
