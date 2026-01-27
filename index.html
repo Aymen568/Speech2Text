@@ -63,28 +63,15 @@
           <div class="transcript-header">
             <div>
               <div class="eyebrow">النص التعليمي المباشر</div>
-              <h2 id="transcriptTitle">ابدأ الشرح ليسجَّل</h2>
             </div>
-            <div class="hint">الصوت يبقى محليًا؛ التحويل للنص يسهّل إعداد الملاحظات والملخصات.</div>
           </div>
-          <div id="transcriptBody" class="transcript-body" aria-live="polite"></div>
+          <div id="aiEditor" class="transcript-body"></div>
         </div>
       </section>
 
-      <aside class="panel questions" aria-label="أسئلة ذات صلة">
-        <div class="panel-header">
-          <div>
-            <div class="eyebrow">مراجعة الدرس</div>
-            <h2>أسئلة المتابعة (لاحقًا)</h2>
-          </div>
-          <button id="refreshQuestions" class="ghost" disabled>لاحقًا</button>
-        </div>
-        <div id="questionList" class="question-list"></div>
-        <div class="note">سيتم إضافة أسئلة مراجعة بعد تجهيز المحتوى.</div>
-      </aside>
     </main>
   </div>
-
+  <script type="module"> import aieditor from 'https://cdn.jsdelivr.net/npm/aieditor@1.4.2/+esm' </script>
   <script src="main.js" defer></script>
 </body>
 </html>

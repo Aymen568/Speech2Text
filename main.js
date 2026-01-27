@@ -6,10 +6,18 @@ const stateLabel = document.getElementById('stateLabel');
 const timerEl = document.getElementById('timer');
 const lastUpdate = document.getElementById('lastUpdate');
 const transcriptionStatus = document.getElementById('transcriptionStatus');
-const transcriptBody = document.getElementById('transcriptBody');
 const transcriptTitle = document.getElementById('transcriptTitle');
 const questionList = document.getElementById('questionList');
 const backendStatus = document.getElementById('backendStatus');
+const aiEditorContainer = document.getElementById('aiEditor');
+
+let aiEditorInstance = null;
+
+window.addEventListener('DOMContentLoaded', () => {
+    aiEditorContainer.contentEditable = 'true';
+    aiEditorContainer.dataset.placeholder = 'سيظهر النص المحول هنا...';
+    aiEditorContainer.classList.add('fallback-editor');
+});
 
 const state = {
   stream: null,
@@ -89,7 +97,9 @@ function updateTimer() {
 
 function clearTranscript() {
   state.transcript = '';
-  transcriptBody.textContent = '';
+  if (aiEditorInstance) {
+    aiEditorInstance.setMarkdown('');  } else if (aiEditorContainer) {
+    aiEditorContainer.textContent = '';  }
   transcriptTitle.textContent = 'ابدأ الشرح ليسجَّل';
   transcriptionStatus.textContent = 'بانتظار التسجيل…';
   clearButton.disabled = true;
@@ -128,7 +138,12 @@ function startBackendStream() {
             if (!text) return;
             transcriptionStatus.textContent = 'نص جزئي';
             transcriptTitle.textContent = 'بث مباشر';
-            transcriptBody.textContent = `${state.transcript} ${text}`.trim();
+            const combined = `${state.transcript} ${text}`.trim();
+            if (aiEditorInstance) {
+              aiEditorInstance.setMarkdown(combined);
+            } else if (aiEditorContainer) {
+              aiEditorContainer.textContent = combined;
+            }
           }
 
           if (msg.type === 'final') {
@@ -140,7 +155,11 @@ function startBackendStream() {
               : text;
 
             transcriptTitle.textContent = 'أحدث نص تعليمي';
-            transcriptBody.textContent = state.transcript;
+            if (aiEditorInstance) {
+              aiEditorInstance.setMarkdown(state.transcript);
+            } else if (aiEditorContainer) {
+              aiEditorContainer.textContent = state.transcript;
+            }
             transcriptionStatus.textContent = 'تم استلام نص';
             lastUpdate.textContent = new Date().toLocaleTimeString();
             clearButton.disabled = false;
@@ -255,8 +274,4 @@ function downsampleBuffer(buffer, inputRate, targetRate) {
 
 function delay(ms) { return new Promise(res => setTimeout(res, ms)); }
 
-function updateQuestions(text) {
-  questionList.innerHTML = '';
-}
 
-updateQuestions('');

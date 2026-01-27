@@ -137,6 +137,11 @@ button.ghost {
   white-space: pre-wrap;
 }
 
+.fallback-editor:empty:before {
+  content: attr(data-placeholder);
+  color: var(--muted);
+}
+
 .questions { position: sticky; top: 18px; }
 .question-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
 .question {
