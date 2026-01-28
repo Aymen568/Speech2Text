@@ -109,7 +109,7 @@ function startBackendStream() {
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
       state.stream = stream;
-      const ws = new WebSocket('ws://localhost:8000/ws');
+      const ws = new WebSocket(BACKEND_WS_URL);
       state.backendWs = ws;
       backendStatus.textContent = 'يتصل…';
 

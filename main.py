@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from speechmatics.rt import (
     AsyncClient,
     AudioEncoding,
@@ -24,7 +25,7 @@ LANGUAGE = os.getenv("SPEECH_LANGUAGE", "ar")
 
 app = FastAPI(title="Speechmatics RT API", version="2.1.0")
 
-# Allow local dev from file:// or http://localhost
+# Allow CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -118,6 +119,10 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.send_json({"type": "error", "message": str(e)})
     finally:
         await websocket.close()
+
+
+# Serve static files (frontend) from current directory
+app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
 
 if __name__ == "__main__":
