@@ -116,16 +116,17 @@ async def websocket_endpoint(websocket: WebSocket):
     except AuthenticationError as e:
         await websocket.send_json({"type": "error", "message": f"Authentication error: {e}"})
     except Exception as e:
+        print(f"WebSocket error: {e}")
         await websocket.send_json({"type": "error", "message": str(e)})
     finally:
         await websocket.close()
-
-
-# Serve static files (frontend) from current directory
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
 
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+
+# Serve static files last to avoid catching API routes
+app.mount("/", StaticFiles(directory=".", html=True), name="static")

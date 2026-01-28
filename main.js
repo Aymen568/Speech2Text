@@ -8,6 +8,19 @@ const transcriptionStatus = document.getElementById('transcriptionStatus');
 const backendStatus = document.getElementById('backendStatus');
 const aiEditorContainer = document.getElementById('aiEditor');
 
+// Backend WebSocket URL (development: always use port 8000)
+const getBackendUrl = () => {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'ws://localhost:8000/ws';
+  }
+  // Production: same domain
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = window.location.host;
+  return `${protocol}//${host}/ws`;
+};
+
+const BACKEND_WS_URL = getBackendUrl();
+
 let aiEditorInstance = null;
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -91,8 +104,10 @@ function updateTimer() {
 function clearTranscript() {
   state.transcript = '';
   if (aiEditorInstance) {
-    aiEditorInstance.setMarkdown('');  } else if (aiEditorContainer) {
-    aiEditorContainer.textContent = '';  }
+    aiEditorInstance.setMarkdown('');
+  } else if (aiEditorContainer) {
+    aiEditorContainer.textContent = '';
+  }
   transcriptionStatus.textContent = 'بانتظار التسجيل…';
   clearButton.disabled = true;
 }
@@ -110,16 +125,20 @@ function startBackendStream() {
         stateLabel.textContent = 'جارٍ البث';
         transcriptionStatus.textContent = 'يستمع…';
 
-        setupAudioGraph(stream, chunk => {
+        setupAudioGraph(stream, (chunk) => {
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(chunk);
           }
         });
       };
 
-      ws.onmessage = ev => {
+      ws.onmessage = (ev) => {
         try {
           const msg = JSON.parse(ev.data);
+
+          if (msg.type === 'connected') {
+            backendStatus.textContent = 'متصل';
+          }
 
           if (msg.type === 'partial') {
             const text = msg.text?.trim();
