@@ -1,13 +1,10 @@
 const recordButton = document.getElementById('recordButton');
 const stopButton = document.getElementById('stopButton');
 const clearButton = document.getElementById('clearButton');
-const refreshQuestions = document.getElementById('refreshQuestions');
 const stateLabel = document.getElementById('stateLabel');
 const timerEl = document.getElementById('timer');
 const lastUpdate = document.getElementById('lastUpdate');
 const transcriptionStatus = document.getElementById('transcriptionStatus');
-const transcriptTitle = document.getElementById('transcriptTitle');
-const questionList = document.getElementById('questionList');
 const backendStatus = document.getElementById('backendStatus');
 const aiEditorContainer = document.getElementById('aiEditor');
 
@@ -33,7 +30,6 @@ const state = {
 recordButton.addEventListener('click', startRecording);
 stopButton.addEventListener('click', stopRecording);
 clearButton.addEventListener('click', clearTranscript);
-refreshQuestions.addEventListener('click', () => updateQuestions(state.transcript));
 
 function setUIRecording(active) {
   stateLabel.textContent = active ? 'جارٍ التسجيل' : 'متوقف';
@@ -49,7 +45,6 @@ function startRecording() {
   state.startedAt = Date.now();
   setUIRecording(true);
   startTimer();
-  transcriptTitle.textContent = 'يستمع…';
   startBackendStream();
 }
 
@@ -70,8 +65,6 @@ function handleStop() {
   state.transcript = state.transcript
         ? `${state.transcript} ${cleaned}`
         : cleaned;
-  transcriptTitle.textContent = 'أحدث نص تعليمي';
-  transcriptBody.textContent = state.transcript;
   transcriptionStatus.textContent = 'تم التحويل';
   clearButton.disabled = !state.transcript;
 }
@@ -100,11 +93,10 @@ function clearTranscript() {
   if (aiEditorInstance) {
     aiEditorInstance.setMarkdown('');  } else if (aiEditorContainer) {
     aiEditorContainer.textContent = '';  }
-  transcriptTitle.textContent = 'ابدأ الشرح ليسجَّل';
   transcriptionStatus.textContent = 'بانتظار التسجيل…';
   clearButton.disabled = true;
-  questionList.innerHTML = '';
 }
+
 function startBackendStream() {
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
@@ -129,15 +121,11 @@ function startBackendStream() {
         try {
           const msg = JSON.parse(ev.data);
 
-          if (msg.type === 'connected') {
-            transcriptTitle.textContent = msg.message;
-          }
-
           if (msg.type === 'partial') {
             const text = msg.text?.trim();
             if (!text) return;
             transcriptionStatus.textContent = 'نص جزئي';
-            transcriptTitle.textContent = 'بث مباشر';
+
             const combined = `${state.transcript} ${text}`.trim();
             if (aiEditorInstance) {
               aiEditorInstance.setMarkdown(combined);
@@ -154,7 +142,6 @@ function startBackendStream() {
               ? `${state.transcript} ${text}`
               : text;
 
-            transcriptTitle.textContent = 'أحدث نص تعليمي';
             if (aiEditorInstance) {
               aiEditorInstance.setMarkdown(state.transcript);
             } else if (aiEditorContainer) {
@@ -163,7 +150,6 @@ function startBackendStream() {
             transcriptionStatus.textContent = 'تم استلام نص';
             lastUpdate.textContent = new Date().toLocaleTimeString();
             clearButton.disabled = false;
-            updateQuestions(state.transcript);
           }
 
           if (msg.type === 'error') {
