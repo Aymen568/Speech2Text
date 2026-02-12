@@ -1,9 +1,9 @@
 import asyncio
 import json
 import os
-
+from google import genai
 from dotenv import load_dotenv
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -22,6 +22,8 @@ load_dotenv()
 
 API_KEY = os.getenv("SPEECHMATICS_API_KEY", "YOUR_API_KEY")
 LANGUAGE = os.getenv("SPEECH_LANGUAGE", "ar")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+
 
 app = FastAPI(title="Speechmatics RT API", version="2.1.0")
 
@@ -120,6 +122,65 @@ async def websocket_endpoint(websocket: WebSocket):
         await websocket.send_json({"type": "error", "message": str(e)})
     finally:
         await websocket.close()
+
+def process_arabic_text(prompt):
+    """Process Arabic text: correct, format, and handle religious verses."""
+    try:
+        client = genai.Client(api_key=GOOGLE_API_KEY)
+        response = client.models.generate_content(
+            model="gemini-3-flash-preview",
+            contents=prompt,
+        )
+        
+        return {
+            "status": "success",
+            "result": response.text
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"An error occurred: {str(e)}"
+        }
+
+
+@app.post("/correctText")
+async def correct_text(request: Request) -> JSONResponse:
+    """Endpoint to correct and format Arabic text."""
+    try:
+        body = await request.json()
+        text = body.get('text', '').strip()
+        
+        if not text:
+            raise ValueError("No text provided for correction.")
+        
+        # Arabic-specific prompt
+        prompt = f"""أنت مساعد متخصص في اللغة العربية والمحتوى الديني. سيتم إعطاؤك نص بالعربية.
+        
+المطلوب:
+1. تصحيح الأخطاء الإملائية والنحوية
+2. تحسين الصياغة والوضوح
+3. إذا كان هناك آيات قرآنية أو أحاديث نبوية:
+   - ضعها في سطر جديد
+   - أحطها برموز مميزة: ✨ [النص] ✨
+   - اكتب مرجع الآية أو الحديث تحتها
+4. تنسيق النص بشكل منظم وسهل القراءة
+5. الحفاظ على المعنى الأصلي
+
+صيغة الرد:
+[النص بعد التصحيح والتنسيق]
+
+النص المراد تصحيحه:
+{text}"""
+        
+        response_data = process_arabic_text(prompt)
+        return JSONResponse(response_data, status_code=200)
+        
+    except Exception as e:
+        return JSONResponse(
+            {"status": "error", "message": str(e)},
+            status_code=500
+        )
 
 
 if __name__ == "__main__":

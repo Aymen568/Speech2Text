@@ -3,3 +3,5 @@ uvicorn
 speechmatics-rt
 httpx
 python-dotenv
+requests
+google-genai

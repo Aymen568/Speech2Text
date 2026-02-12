@@ -21,8 +21,6 @@ const getBackendUrl = () => {
 
 const BACKEND_WS_URL = getBackendUrl();
 
-let aiEditorInstance = null;
-
 window.addEventListener('DOMContentLoaded', () => {
     aiEditorContainer.contentEditable = 'true';
     aiEditorContainer.dataset.placeholder = 'سيظهر النص المحول هنا...';
@@ -67,19 +65,56 @@ function stopRecording() {
   setUIRecording(false);
   stopTimer();
   stopBackendStream();
+  setTimeout(() => {
+    if (aiEditorContainer.textContent && aiEditorContainer.textContent.trim().length > 0) {
+      transcriptionStatus.textContent = 'جارٍ التصحيح والتنسيق…';
+      correctTranscript(aiEditorContainer.textContent);
+    } else {
+      transcriptionStatus.textContent = 'بانتظار التسجيل…';
+    }
+  }, 500); // Small delay to allow final WebSocket processing
 }
 
-function handleStop() {
-  stopStream();
-  const blob = new Blob(state.chunks, { type: 'audio/webm' });
-  state.chunks = [];
-  transcriptionStatus.textContent = 'جارٍ التحويل للنص…';
-  lastUpdate.textContent = new Date().toLocaleTimeString();
-  state.transcript = state.transcript
-        ? `${state.transcript} ${cleaned}`
-        : cleaned;
-  transcriptionStatus.textContent = 'تم التحويل';
-  clearButton.disabled = !state.transcript;
+async function correctTranscript(text) {
+  if (!text || text.trim().length === 0) {
+    transcriptionStatus.textContent = 'لا يوجد نص لتصحيحه';
+    return;
+  }
+  
+  try {
+    const response = await fetch('http://127.0.0.1:8000/correctText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: text.trim() })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.status === 'success' && data.result) {
+      // Replace transcript with corrected text
+      state.transcript = data.result;
+      
+      // Display corrected text in editor
+      if (aiEditorContainer) {
+        aiEditorContainer.textContent = data.result;
+      }
+      
+      transcriptionStatus.textContent = 'تم التصحيح والتنسيق بنجاح';
+      lastUpdate.textContent = new Date().toLocaleTimeString();
+      clearButton.disabled = false;
+    } else {
+      transcriptionStatus.textContent = data.message || 'فشل التصحيح';
+    }
+  } catch (error) {
+    console.error('Correction error:', error);
+    transcriptionStatus.textContent = `خطأ في التصحيح: ${error.message}`;
+  }
 }
 
 function startTimer() {
@@ -103,9 +138,7 @@ function updateTimer() {
 
 function clearTranscript() {
   state.transcript = '';
-  if (aiEditorInstance) {
-    aiEditorInstance.setMarkdown('');
-  } else if (aiEditorContainer) {
+  if (aiEditorContainer) {
     aiEditorContainer.textContent = '';
   }
   transcriptionStatus.textContent = 'بانتظار التسجيل…';
@@ -133,6 +166,9 @@ function startBackendStream() {
       };
 
       ws.onmessage = (ev) => {
+        
+        if (state.stopping) return;
+        
         try {
           const msg = JSON.parse(ev.data);
 
@@ -146,9 +182,7 @@ function startBackendStream() {
             transcriptionStatus.textContent = 'نص جزئي';
 
             const combined = `${state.transcript} ${text}`.trim();
-            if (aiEditorInstance) {
-              aiEditorInstance.setMarkdown(combined);
-            } else if (aiEditorContainer) {
+            if (aiEditorContainer) {
               aiEditorContainer.textContent = combined;
             }
           }
@@ -161,9 +195,7 @@ function startBackendStream() {
               ? `${state.transcript} ${text}`
               : text;
 
-            if (aiEditorInstance) {
-              aiEditorInstance.setMarkdown(state.transcript);
-            } else if (aiEditorContainer) {
+            if (aiEditorContainer) {
               aiEditorContainer.textContent = state.transcript;
             }
             transcriptionStatus.textContent = 'تم استلام نص';
@@ -206,18 +238,38 @@ function startBackendStream() {
 }
 
 function stopBackendStream() {
+  // Mark as stopping to prevent processing new messages
+  state.stopping = true;
+  
   if (state.backendWs) {
     try {
+      // Send stop signal first
       state.backendWs.send(JSON.stringify({ type: 'stop' }));
-    } catch (e) { /* ignore */ }
-    state.backendWs.close();
-    state.backendWs = null;
+      
+      // Close after a short delay to allow final message processing
+      setTimeout(() => {
+        if (state.backendWs && state.backendWs.readyState === WebSocket.OPEN) {
+          state.backendWs.close();
+        }
+        state.backendWs = null;
+        state.stopping = false;
+      }, 100);
+    } catch (e) { 
+      console.warn('Error stopping WebSocket:', e);
+      state.backendWs = null;
+      state.stopping = false;
+    }
+  } else {
+    state.stopping = false;
   }
+  
   teardownAudioGraph();
+  
   if (state.stream) {
     state.stream.getTracks().forEach(t => t.stop());
     state.stream = null;
   }
+  
   backendStatus.textContent = 'غير متصل';
   stateLabel.textContent = 'متوقف';
 }
