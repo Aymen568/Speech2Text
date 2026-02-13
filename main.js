@@ -5,7 +5,6 @@ const stateLabel = document.getElementById('stateLabel');
 const timerEl = document.getElementById('timer');
 const lastUpdate = document.getElementById('lastUpdate');
 const transcriptionStatus = document.getElementById('transcriptionStatus');
-const backendStatus = document.getElementById('backendStatus');
 const aiEditorContainer = document.getElementById('aiEditor');
 
 // Backend WebSocket URL (development: always use port 8000)
@@ -151,10 +150,8 @@ function startBackendStream() {
       state.stream = stream;
       const ws = new WebSocket(BACKEND_WS_URL);
       state.backendWs = ws;
-      backendStatus.textContent = 'يتصل…';
 
       ws.onopen = () => {
-        backendStatus.textContent = 'متصل';
         stateLabel.textContent = 'جارٍ البث';
         transcriptionStatus.textContent = 'يستمع…';
 
@@ -171,10 +168,6 @@ function startBackendStream() {
         
         try {
           const msg = JSON.parse(ev.data);
-
-          if (msg.type === 'connected') {
-            backendStatus.textContent = 'متصل';
-          }
 
           if (msg.type === 'partial') {
             const text = msg.text?.trim();
@@ -205,7 +198,6 @@ function startBackendStream() {
 
           if (msg.type === 'error') {
             transcriptionStatus.textContent = msg.message;
-            backendStatus.textContent = 'خطأ';
           }
         } catch (err) {
           console.error('Parse error:', err);
@@ -213,12 +205,10 @@ function startBackendStream() {
       };
 
       ws.onerror = () => {
-        backendStatus.textContent = 'خطأ في الاتصال';
         transcriptionStatus.textContent = 'فشل الاتصال بالخادم';
       };
 
       ws.onclose = () => {
-        backendStatus.textContent = 'انقطع الاتصال';
         stateLabel.textContent = 'متوقف';
         state.backendWs = null;
         teardownAudioGraph();
@@ -229,7 +219,6 @@ function startBackendStream() {
       };
     })
     .catch(() => {
-      backendStatus.textContent = 'تم رفض الإذن';
       transcriptionStatus.textContent = 'لا يمكن الوصول للميكروفون';
       state.isRecording = false;
       setUIRecording(false);
@@ -269,8 +258,7 @@ function stopBackendStream() {
     state.stream.getTracks().forEach(t => t.stop());
     state.stream = null;
   }
-  
-  backendStatus.textContent = 'غير متصل';
+
   stateLabel.textContent = 'متوقف';
 }
 
