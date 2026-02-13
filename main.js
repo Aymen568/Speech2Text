@@ -6,12 +6,13 @@ const timerEl = document.getElementById('timer');
 const lastUpdate = document.getElementById('lastUpdate');
 const transcriptionStatus = document.getElementById('transcriptionStatus');
 const aiEditorContainer = document.getElementById('aiEditor');
-const backendURL = "https://speech2-text-qudr.vercel.app/"
+const backendURL = "https://speech2-text-qudr.vercel.app"
 
-// Backend WebSocket URL (development: always use port 8000)
+// Backend WebSocket URL
 const getBackendUrl = () => {
+  // Remove protocol and trailing slash from backendURL to get clean host
+  const host = backendURL.replace(/^https?:\/\//, '').replace(/\/$/, '');
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = backendURL;
   return `${protocol}//${host}/ws`;
 };
 
