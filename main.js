@@ -6,19 +6,17 @@ const timerEl = document.getElementById('timer');
 const lastUpdate = document.getElementById('lastUpdate');
 const transcriptionStatus = document.getElementById('transcriptionStatus');
 const aiEditorContainer = document.getElementById('aiEditor');
+const backendURL = "https://speech2-text-qudr.vercel.app/"
 
 // Backend WebSocket URL (development: always use port 8000)
 const getBackendUrl = () => {
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'ws://localhost:8000/ws';
-  }
-  // Production: same domain
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = window.location.host;
+  const host = backendURL;
   return `${protocol}//${host}/ws`;
 };
 
 const BACKEND_WS_URL = getBackendUrl();
+const BACKEND_CORRECT_URL = `${backendURL}/correctText`;
 
 window.addEventListener('DOMContentLoaded', () => {
     aiEditorContainer.contentEditable = 'true';
@@ -81,7 +79,7 @@ async function correctTranscript(text) {
   }
   
   try {
-    const response = await fetch('http://127.0.0.1:8000/correctText', {
+    const response = await fetch(BACKEND_CORRECT_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
